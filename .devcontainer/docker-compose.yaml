@@ -1,0 +1,21 @@
+version: '3'
+services:
+  go:
+    build:
+      context: ./
+      args:
+        - VARIANT=1
+        - INSTALL_NODE=true
+        - NODE_VERSION=lts/*
+    cap_add:
+      - "SYS_PTRACE"
+    security_opt:
+      - seccomp:unconfined
+    working_dir: /app
+    ports: 
+      - '9000:9000'
+    volumes:
+      - ../:/app
+    expose:
+      - '9000'
+    command: sleep infinity

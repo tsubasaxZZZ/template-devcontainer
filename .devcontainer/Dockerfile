@@ -1,0 +1,120 @@
+# See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.155.1/containers/go/.devcontainer/base.Dockerfile
+
+# [Choice] Go version: 1, 1.15, 1.14
+ARG VARIANT="1"
+FROM mcr.microsoft.com/vscode/devcontainers/go:0-${VARIANT}
+
+ARG USERNAME=tsunomur
+ARG USER_UID=1100
+ARG USER_GID=$USER_UID
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME -s /bin/bash -d /home/$USERNAME \
+    #
+    # [Optional] Add sudo support. Omit if you don't need to install software after connecting.
+    && apt-get update \
+    && apt-get install -y sudo \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+
+# Download CloudShell asset
+RUN wget https://github.com/Azure/CloudShell/archive/master.zip && \
+    unzip master.zip && \
+    chmod 755 CloudShell-master/linux/*/* && \
+    mv CloudShell-master/linux/ansible/* /usr/local/bin && \
+    mv CloudShell-master/linux/terraform/* /usr/local/bin
+
+
+# Install Node.js
+ARG INSTALL_NODE="true"
+ARG NODE_VERSION="lts/*"
+RUN if [ "${INSTALL_NODE}" = "true" ]; then su vscode -c "umask 0002 && . /usr/local/share/nvm/nvm.sh && nvm install ${NODE_VERSION} 2>&1"; fi
+
+# kubectl
+RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+RUN chmod +x ./kubectl
+RUN mv ./kubectl /usr/local/bin
+
+# Azure CLI
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+# Azure Functions
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+RUN mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
+RUN sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/debian/$(lsb_release -rs | cut -d'.' -f 1)/prod $(lsb_release -cs) main" > /etc/apt/sources.list.d/dotnetdev.list'
+RUN apt-get update && \
+    apt-get install azure-functions-core-tools-3
+
+# terraform
+RUN apt-get install -y software-properties-common && \
+    curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add - && \
+    apt-add-repository "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main" && \
+    apt-get update && \
+    apt-get install terraform
+
+# Python3
+RUN apt-get install -y python3 \
+    python3-pip \
+    python3-venv \ 
+    python3.7-dev
+
+# Ansible
+RUN pip3 install virtualenv \
+    && cd /opt \
+    && virtualenv -p python3 ansible \
+    && /bin/bash -c "source ansible/bin/activate && pip3 install ansible && pip3 install pywinrm>=0.2.2 && deactivate" \
+    && ansible-galaxy collection install azure.azcollection
+
+# Download and Install the latest packer (AMD64)
+RUN PACKER_VERSION=$(curl -sSL https://checkpoint-api.hashicorp.com/v1/check/packer | jq -r -M ".current_version") \
+  && wget -nv -O packer.zip https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip \
+  && wget -nv -O packer.sha256 https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_SHA256SUMS \
+  && wget -nv -O packer.sha256.sig https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_SHA256SUMS.sig \
+  && curl -s https://keybase.io/hashicorp/pgp_keys.asc | gpg --import \
+  && gpg --verify packer.sha256.sig packer.sha256 \
+  && echo $(grep -Po "[[:xdigit:]]{64}(?=\s+packer_${PACKER_VERSION}_linux_amd64.zip)" packer.sha256) packer.zip | sha256sum -c \
+  && unzip packer.zip \
+  && mv packer /usr/local/bin \
+  && chmod a+x /usr/local/bin/packer \
+  && rm -f packer packer.zip packer.sha256 packer.sha256.sig \
+  && unset PACKER_VERSION
+
+# Download and install AzCopy SCD of linux-x64
+RUN curl -sSL https://aka.ms/downloadazcopy-v10-linux -o azcopy-netcore_linux_x64.tar.gz \
+  && mkdir azcopy \
+  && tar xf azcopy-netcore_linux_x64.tar.gz -C azcopy --strip-components 1 \
+  && mv azcopy/azcopy /usr/local/bin/azcopy \
+  && chmod a+x /usr/local/bin/azcopy \
+  && rm -f azcopy-netcore_linux_x64.tar.gz && rm -rf azcopy
+
+# Other
+RUN apt-get install -y \
+    file \
+    vim
+RUN wget https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash -O ~tsunomur/.git-completion.bash && \
+    wget https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh -O ~tsunomur/.git-prompt.sh
+
+RUN ln -sf /app/.bashrc ~tsunomur/.bashrc
+
+#RUN apt-get install -y software-properties-common
+#RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add - && \
+#    apt-add-repository "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main" && \
+#    apt-get install -y terraform
+
+
+# [Optional] Uncomment this section to install additional OS packages.
+# RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+#     && apt-get -y install --no-install-recommends <your-package-list-here>
+
+# [Optional] Uncomment the next line to use go get to install anything else you need
+RUN go get github.com/x-motemen/ghq && \
+    apt-get install \
+    peco \
+    fzf
+
+# [Optional] Uncomment this line to install global node packages.
+# RUN su vscode -c "source /usr/local/share/nvm/nvm.sh && npm install -g <your-package-here>" 2>&1
+
+USER $USERNAME
+WORKDIR /home/tsunomur
+RUN mkdir .kube && \
+    kubectl completion bash > ~/.kube/completion.bash.inc

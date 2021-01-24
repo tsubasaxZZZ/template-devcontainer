@@ -1,0 +1,8 @@
+[user]
+        email = tsubasa@nomupro.com
+        name = Tsubasa Nomura
+[ghq]
+        vcs = git
+        root = /github
+[core]
+        autocrlf = false
