@@ -29,4 +29,4 @@ jobs:
           context: .devcontainer
           push: true
           tags: |
-            tsubasaxzzz/${{ env.IMAGE_NAME }}:latest
+            tsubasaxzzz/devcontainer:latest
