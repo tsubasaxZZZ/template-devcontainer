@@ -4,7 +4,7 @@
 ARG VARIANT="1"
 FROM mcr.microsoft.com/vscode/devcontainers/go:0-${VARIANT}
 
-COPY . /app
+COPY [".", ".bashrc", ".gitconfig", ".vscode", "/app/"]
 
 ARG USERNAME=tsunomur
 ARG USER_UID=1100
@@ -22,14 +22,13 @@ RUN groupadd --gid $USER_GID $USERNAME \
 RUN wget https://github.com/Azure/CloudShell/archive/master.zip && \
     unzip master.zip && \
     chmod 755 CloudShell-master/linux/*/* && \
-    mv CloudShell-master/linux/ansible/* /usr/local/bin && \
-    mv CloudShell-master/linux/terraform/* /usr/local/bin
+    mv CloudShell-master/linux/ansible/* /usr/local/bin
 
 
 # Install Node.js
-ARG INSTALL_NODE="true"
 ARG NODE_VERSION="lts/*"
-RUN if [ "${INSTALL_NODE}" = "true" ]; then su vscode -c "umask 0002 && . /usr/local/share/nvm/nvm.sh && nvm install ${NODE_VERSION} 2>&1"; fi
+RUN su vscode -c "umask 0002 && . /usr/local/share/nvm/nvm.sh && nvm install ${NODE_VERSION} 2>&1" \
+    && chown -R ${USERNAME}:nvm /usr/local/share/nvm
 
 # kubectl
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
@@ -92,10 +91,10 @@ RUN curl -sSL https://aka.ms/downloadazcopy-v10-linux -o azcopy-netcore_linux_x6
 RUN apt-get install -y \
     file \
     vim
-RUN wget https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash -O ~tsunomur/.git-completion.bash && \
-    wget https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh -O ~tsunomur/.git-prompt.sh
+RUN wget https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash -O /home/${USERNAME}/.git-completion.bash && \
+    wget https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh -O /home/${USERNAME}/.git-prompt.sh
 
-RUN ln -sf /app/.bashrc ~tsunomur/.bashrc
+RUN ln -sf /app/.bashrc /home/${USERNAME}/.bashrc
 
 #RUN apt-get install -y software-properties-common
 #RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add - && \
@@ -110,13 +109,14 @@ RUN ln -sf /app/.bashrc ~tsunomur/.bashrc
 # [Optional] Uncomment the next line to use go get to install anything else you need
 RUN go get github.com/x-motemen/ghq && \
     apt-get install \
-    peco \
-    fzf
-
+    peco
 # [Optional] Uncomment this line to install global node packages.
 # RUN su vscode -c "source /usr/local/share/nvm/nvm.sh && npm install -g <your-package-here>" 2>&1
 
 USER $USERNAME
-WORKDIR /home/tsunomur
-RUN mkdir .kube && \
-    kubectl completion bash > ~/.kube/completion.bash.inc
+WORKDIR /home/${USERNAME}
+RUN mkdir .kube \
+    && kubectl completion bash > ~/.kube/completion.bash.inc \
+    && git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf \
+    &&  ~/.fzf/install --completion --key-bindings --update-rc
+
