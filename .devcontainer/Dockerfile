@@ -4,6 +4,8 @@
 ARG VARIANT="1"
 FROM mcr.microsoft.com/vscode/devcontainers/go:0-${VARIANT}
 
+COPY . /app
+
 ARG USERNAME=tsunomur
 ARG USER_UID=1100
 ARG USER_GID=$USER_UID
