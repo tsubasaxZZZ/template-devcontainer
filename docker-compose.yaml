@@ -3,10 +3,7 @@ services:
   go:
     build:
       context: ./
-      args:
-        - VARIANT=1
-        - INSTALL_NODE=true
-        - NODE_VERSION=lts/*
+      dockerfile: .devcontainer/Dockerfile
     cap_add:
       - "SYS_PTRACE"
     security_opt:

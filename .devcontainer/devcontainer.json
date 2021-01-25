@@ -2,7 +2,7 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.155.1/containers/go
 {
 	"name": "Go",
-	"dockerComposeFile" :["./docker-compose.yaml"],
+	"dockerComposeFile" :["../docker-compose.yaml"],
 	//"build": {
 		//"dockerfile": "Dockerfile",
 		//"args": {
