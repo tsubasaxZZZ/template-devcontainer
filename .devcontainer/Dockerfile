@@ -94,7 +94,8 @@ RUN apt-get install -y \
 RUN wget https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash -O /home/${USERNAME}/.git-completion.bash && \
     wget https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh -O /home/${USERNAME}/.git-prompt.sh
 
-RUN ln -sf /app/.bashrc /home/${USERNAME}/.bashrc
+RUN ln -sf /app/.bashrc /home/${USERNAME}/.bashrc \
+    && ln -sf /app/.gitconfig /home/${USERNAME}/.gitconfig
 
 #RUN apt-get install -y software-properties-common
 #RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add - && \
