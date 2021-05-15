@@ -126,3 +126,14 @@ alias k=kubectl
 complete -F __start_kubectl k
 . .kube/completion.bash.inc
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
+
+# Ansible enviornment
+PATH=$PATH:/opt/ansible/bin
+
+# Java environment
+. "$HOME/.sdkman/bin/sdkman-init.sh"
+#export JAVA_HOME=/usr/lib/jvm/default-java
+#export M2_HOME=/opt/maven
+#export MAVEN_HOME=/opt/maven
+#export MAVEN_CONFIG=$HOME/.m2
+#export PATH=${M2_HOME}/bin:${PATH}

@@ -3,12 +3,14 @@
 # [Choice] Go version: 1, 1.15, 1.14
 ARG VARIANT="1"
 FROM mcr.microsoft.com/vscode/devcontainers/go
+SHELL [ "/bin/bash", "-c" ]
 
 COPY [".", ".bashrc", ".gitconfig", ".vscode", "/app/"]
 
 ARG USERNAME=tsunomur
 ARG USER_UID=1100
 ARG USER_GID=$USER_UID
+
 RUN groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME -s /bin/bash -d /home/$USERNAME \
     #
@@ -17,13 +19,7 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && apt-get install -y sudo \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
-
-# Download CloudShell asset
-RUN wget https://github.com/Azure/CloudShell/archive/master.zip && \
-    unzip master.zip && \
-    chmod 755 CloudShell-master/linux/*/* && \
-    mv CloudShell-master/linux/ansible/* /usr/local/bin
-
+RUN chown -R ${USERNAME}:${USERNAME} /app
 
 # Install Node.js
 ARG NODE_VERSION="lts/*"
@@ -59,6 +55,7 @@ RUN apt-get install -y python3 \
     python3.7-dev
 
 # Ansible
+ENV PATH $PATH:/opt/ansible/bin
 RUN pip3 install virtualenv \
     && cd /opt \
     && virtualenv -p python3 ansible \
@@ -67,25 +64,43 @@ RUN pip3 install virtualenv \
 
 # Download and Install the latest packer (AMD64)
 RUN PACKER_VERSION=$(curl -sSL https://checkpoint-api.hashicorp.com/v1/check/packer | jq -r -M ".current_version") \
-  && wget -nv -O packer.zip https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip \
-  && wget -nv -O packer.sha256 https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_SHA256SUMS \
-  && wget -nv -O packer.sha256.sig https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_SHA256SUMS.sig \
-  && curl -s https://keybase.io/hashicorp/pgp_keys.asc | gpg --import \
-  && gpg --verify packer.sha256.sig packer.sha256 \
-  && echo $(grep -Po "[[:xdigit:]]{64}(?=\s+packer_${PACKER_VERSION}_linux_amd64.zip)" packer.sha256) packer.zip | sha256sum -c \
-  && unzip packer.zip \
-  && mv packer /usr/local/bin \
-  && chmod a+x /usr/local/bin/packer \
-  && rm -f packer packer.zip packer.sha256 packer.sha256.sig \
-  && unset PACKER_VERSION
+    && wget -nv -O packer.zip https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip \
+    && wget -nv -O packer.sha256 https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_SHA256SUMS \
+    && wget -nv -O packer.sha256.sig https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_SHA256SUMS.sig \
+    && curl -s https://keybase.io/hashicorp/pgp_keys.asc | gpg --import \
+    && gpg --verify packer.sha256.sig packer.sha256 \
+    && echo $(grep -Po "[[:xdigit:]]{64}(?=\s+packer_${PACKER_VERSION}_linux_amd64.zip)" packer.sha256) packer.zip | sha256sum -c \
+    && unzip packer.zip \
+    && mv packer /usr/local/bin \
+    && chmod a+x /usr/local/bin/packer \
+    && rm -f packer packer.zip packer.sha256 packer.sha256.sig \
+    && unset PACKER_VERSION
 
 # Download and install AzCopy SCD of linux-x64
 RUN curl -sSL https://aka.ms/downloadazcopy-v10-linux -o azcopy-netcore_linux_x64.tar.gz \
-  && mkdir azcopy \
-  && tar xf azcopy-netcore_linux_x64.tar.gz -C azcopy --strip-components 1 \
-  && mv azcopy/azcopy /usr/local/bin/azcopy \
-  && chmod a+x /usr/local/bin/azcopy \
-  && rm -f azcopy-netcore_linux_x64.tar.gz && rm -rf azcopy
+    && mkdir azcopy \
+    && tar xf azcopy-netcore_linux_x64.tar.gz -C azcopy --strip-components 1 \
+    && mv azcopy/azcopy /usr/local/bin/azcopy \
+    && chmod a+x /usr/local/bin/azcopy \
+    && rm -f azcopy-netcore_linux_x64.tar.gz && rm -rf azcopy
+
+# Install Java environment
+USER $USERNAME
+RUN curl -s "https://get.sdkman.io" | bash \
+    && source "$HOME/.sdkman/bin/sdkman-init.sh" \
+    && sdk install java \
+    && sdk install gradle \
+    && sdk install maven
+USER root
+#ARG MAVEN_VERSION=3.8.1
+#ARG MAVEN_BASE_URL=https://apache.osuosl.org/maven/maven-3/${MAVEN_VERSION}/binaries
+#ARG GRADLE_VERSION=7.0.2
+#RUN apt install -y default-jdk \
+    #&& mkdir -p /opt/maven \
+    #&& curl -fsSL -o /tmp/apache-maven.tar.gz ${MAVEN_BASE_URL}/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+    #&& tar -xzf /tmp/apache-maven.tar.gz -C /opt/maven --strip-components=1 \
+    #&& rm -f /tmp/apache-maven.tar.gz \
+    #&& mkdir /opt/gradle
 
 # Other
 RUN apt-get install -y \
