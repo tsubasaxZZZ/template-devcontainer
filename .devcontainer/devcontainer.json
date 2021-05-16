@@ -38,7 +38,8 @@
 		"golang.Go",
 		"ms-kubernetes-tools.vscode-kubernetes-tools",
 		"ms-vscode.vscode-node-azure-pack",
-		"hashicorp.terraform"
+		"hashicorp.terraform",
+		"vscjava.vscode-java-pack"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
