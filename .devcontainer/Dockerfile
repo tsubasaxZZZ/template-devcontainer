@@ -84,23 +84,36 @@ RUN curl -sSL https://aka.ms/downloadazcopy-v10-linux -o azcopy-netcore_linux_x6
     && chmod a+x /usr/local/bin/azcopy \
     && rm -f azcopy-netcore_linux_x64.tar.gz && rm -rf azcopy
 
-# Install Java environment
+# krew plugin
+RUN curl -fsSL -o /tmp/krew.tar.gz "https://github.com/kubernetes-sigs/krew/releases/latest/download/krew.tar.gz" \
+    && tar zxvf /tmp/krew.tar.gz -C /tmp \
+    && mv /tmp/krew-linux_amd64 /usr/local/bin/krew
+
 USER $USERNAME
+# Install Java environment
 RUN curl -s "https://get.sdkman.io" | bash \
     && source "$HOME/.sdkman/bin/sdkman-init.sh" \
+    && mkdir -p ~/.sdkman/etc/ \
+    && echo "sdkman_curl_connect_timeout=120" >> ~/.sdkman/etc/config \
+    && echo "sdkman_curl_max_time=0" >> ~/.sdkman/etc/config \
     && sdk install java \
     && sdk install gradle \
     && sdk install maven
+# Install krew plugin
+RUN krew install krew \
+    && krew install ns \
+    && krew install ctx
 USER root
+
 #ARG MAVEN_VERSION=3.8.1
 #ARG MAVEN_BASE_URL=https://apache.osuosl.org/maven/maven-3/${MAVEN_VERSION}/binaries
 #ARG GRADLE_VERSION=7.0.2
 #RUN apt install -y default-jdk \
-    #&& mkdir -p /opt/maven \
-    #&& curl -fsSL -o /tmp/apache-maven.tar.gz ${MAVEN_BASE_URL}/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
-    #&& tar -xzf /tmp/apache-maven.tar.gz -C /opt/maven --strip-components=1 \
-    #&& rm -f /tmp/apache-maven.tar.gz \
-    #&& mkdir /opt/gradle
+#&& mkdir -p /opt/maven \
+#&& curl -fsSL -o /tmp/apache-maven.tar.gz ${MAVEN_BASE_URL}/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+#&& tar -xzf /tmp/apache-maven.tar.gz -C /opt/maven --strip-components=1 \
+#&& rm -f /tmp/apache-maven.tar.gz \
+#&& mkdir /opt/gradle
 
 # Other
 RUN apt-get install -y \

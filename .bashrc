@@ -137,3 +137,4 @@ PATH=$PATH:/opt/ansible/bin
 #export MAVEN_HOME=/opt/maven
 #export MAVEN_CONFIG=$HOME/.m2
 #export PATH=${M2_HOME}/bin:${PATH}
+export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
