@@ -4,6 +4,7 @@ services:
     build:
       context: ./
       dockerfile: .devcontainer/Dockerfile
+    user: "tsunomur"
     cap_add:
       - "SYS_PTRACE"
     security_opt:
