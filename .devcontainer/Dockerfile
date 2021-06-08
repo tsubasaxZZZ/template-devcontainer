@@ -1,8 +1,8 @@
 # See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.155.1/containers/go/.devcontainer/base.Dockerfile
+FROM golang:latest as golang
 
-# [Choice] Go version: 1, 1.15, 1.14
-ARG VARIANT="1"
-FROM mcr.microsoft.com/vscode/devcontainers/go
+
+FROM mcr.microsoft.com/vscode/devcontainers/base:ubuntu-20.04
 SHELL [ "/bin/bash", "-c" ]
 
 COPY [".", ".bashrc", ".gitconfig", ".vscode", "/app/"]
@@ -11,6 +11,9 @@ ARG USERNAME=tsunomur
 ARG USER_UID=1100
 ARG USER_GID=$USER_UID
 
+RUN sh -c 'echo "[interop]\nappendWindowsPath = false" > /etc/wsl.conf'
+
+RUN sed -i.org -e "s/\/\/archive\.ubuntu\.com/\/\/jp\.archive\.ubuntu\.com/g" /etc/apt/sources.list
 RUN groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME -s /bin/bash -d /home/$USERNAME \
     #
@@ -21,10 +24,15 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 RUN chown -R ${USERNAME}:${USERNAME} /app
 
+# Install golang
+COPY --from=golang /usr/local/go /usr/local/go/
+
 # Install Node.js
+USER $USERNAME
 ARG NODE_VERSION="lts/*"
-RUN su vscode -c "umask 0002 && . /usr/local/share/nvm/nvm.sh && nvm install ${NODE_VERSION} 2>&1" \
-    && chown -R ${USERNAME}:nvm /usr/local/share/nvm
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash \
+    && . /home/$USERNAME/.nvm/nvm.sh && nvm install ${NODE_VERSION}
+USER root
 
 # kubectl
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
@@ -37,7 +45,7 @@ RUN curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 # Azure Functions
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
 RUN mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
-RUN sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/debian/$(lsb_release -rs | cut -d'.' -f 1)/prod $(lsb_release -cs) main" > /etc/apt/sources.list.d/dotnetdev.list'
+RUN sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-ubuntu-$(lsb_release -cs)-prod $(lsb_release -cs) main" > /etc/apt/sources.list.d/dotnetdev.list'
 RUN apt-get update && \
     apt-get install azure-functions-core-tools-3
 
@@ -52,7 +60,7 @@ RUN apt-get install -y software-properties-common && \
 RUN apt-get install -y python3 \
     python3-pip \
     python3-venv \ 
-    python3.7-dev
+    python3.8-dev
 
 # Ansible
 ENV PATH $PATH:/opt/ansible/bin
@@ -96,7 +104,7 @@ RUN curl -s "https://get.sdkman.io" | bash \
     && mkdir -p ~/.sdkman/etc/ \
     && echo "sdkman_curl_connect_timeout=120" >> ~/.sdkman/etc/config \
     && echo "sdkman_curl_max_time=0" >> ~/.sdkman/etc/config \
-    && sdk install java \
+    && sdk install java 11.0.11.9.1-ms \
     && sdk install gradle \
     && sdk install maven
 # Install krew plugin
@@ -136,9 +144,7 @@ RUN ln -sf /app/.bashrc /home/${USERNAME}/.bashrc \
 #     && apt-get -y install --no-install-recommends <your-package-list-here>
 
 # [Optional] Uncomment the next line to use go get to install anything else you need
-RUN go get github.com/x-motemen/ghq && \
-    apt-get install \
-    peco
+RUN apt-get install peco
 # [Optional] Uncomment this line to install global node packages.
 # RUN su vscode -c "source /usr/local/share/nvm/nvm.sh && npm install -g <your-package-here>" 2>&1
 
@@ -147,5 +153,5 @@ WORKDIR /home/${USERNAME}
 RUN mkdir .kube \
     && kubectl completion bash > ~/.kube/completion.bash.inc \
     && git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf \
-    &&  ~/.fzf/install --completion --key-bindings --update-rc
-
+    &&  ~/.fzf/install --completion --key-bindings --update-rc \
+    && /usr/local/go/bin/go get github.com/x-motemen/ghq

@@ -130,8 +130,13 @@ complete -F __start_kubectl k
 # Ansible enviornment
 PATH=$PATH:/opt/ansible/bin
 
+# golang environment
+PATH=$PATH:~/go/bin:/usr/local/go/bin
+
 # Java environment
 . "$HOME/.sdkman/bin/sdkman-init.sh"
+# nvm
+. "$HOME/.nvm/nvm.sh"
 #export JAVA_HOME=/usr/lib/jvm/default-java
 #export M2_HOME=/opt/maven
 #export MAVEN_HOME=/opt/maven
