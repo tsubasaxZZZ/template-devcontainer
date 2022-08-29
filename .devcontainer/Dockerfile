@@ -93,7 +93,7 @@ RUN curl -sSL https://aka.ms/downloadazcopy-v10-linux -o azcopy-netcore_linux_x6
     && rm -f azcopy-netcore_linux_x64.tar.gz && rm -rf azcopy
 
 # krew plugin
-RUN curl -fsSL -o /tmp/krew.tar.gz "https://github.com/kubernetes-sigs/krew/releases/latest/download/krew.tar.gz" \
+RUN curl -fsSL -o /tmp/krew.tar.gz "https://github.com/kubernetes-sigs/krew/releases/latest/download/krew-darwin_amd64.tar.gz" \
     && tar zxvf /tmp/krew.tar.gz -C /tmp \
     && mv /tmp/krew-linux_amd64 /usr/local/bin/krew
 
