@@ -155,4 +155,4 @@ RUN mkdir .kube \
     && kubectl completion bash > ~/.kube/completion.bash.inc \
     && git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf \
     &&  ~/.fzf/install --completion --key-bindings --update-rc \
-    && /usr/local/go/bin/go get github.com/x-motemen/ghq
+    && /usr/local/go/bin/go install github.com/x-motemen/ghq
