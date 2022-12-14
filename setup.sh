@@ -9,8 +9,8 @@ sudo chmod 0440 /etc/sudoers.d/$USERNAME
 sudo snap install go  --classic
 
 # get asset
-\mv -f .bashrc .bashrc.org
-\mv -f .gitconfig .gitconfig.org
+[ -e .bashrc ] && \mv -f .bashrc .bashrc.org
+[ -e .gitconfig ] && \mv -f .gitconfig .gitconfig.org
 wget https://raw.githubusercontent.com/tsubasaxZZZ/template-devcontainer/master/.bashrc
 wget https://raw.githubusercontent.com/tsubasaxZZZ/template-devcontainer/master/.gitconfig
 
