@@ -1,4 +1,5 @@
 #!/bin/sh
+set -ex
 USERNAME=$USER
 # set sudo
 echo $USERNAME ALL=\(root\) NOPASSWD:ALL | sudo tee /etc/sudoers.d/$USERNAME
