@@ -143,3 +143,4 @@ PATH=$PATH:~/go/bin:/usr/local/go/bin
 #export MAVEN_CONFIG=$HOME/.m2
 #export PATH=${M2_HOME}/bin:${PATH}
 export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
