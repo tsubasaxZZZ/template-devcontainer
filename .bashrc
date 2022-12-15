@@ -47,12 +47,12 @@ force_color_prompt=yes
 
 if [ -n "$force_color_prompt" ]; then
     if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-	# We have color support; assume it's compliant with Ecma-48
-	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
-	# a case would tend to support setf rather than setaf.)
-	color_prompt=yes
+        # We have color support; assume it's compliant with Ecma-48
+        # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+        # a case would tend to support setf rather than setaf.)
+        color_prompt=yes
     else
-	color_prompt=
+        color_prompt=
     fi
 fi
 
@@ -119,13 +119,13 @@ if ! shopt -oq posix; then
   fi
 fi
  
-. .git-completion.bash
-. .git-prompt.sh
+. $HOME/.git-completion.bash
+. $HOME/.git-prompt.sh
 
 alias k=kubectl
 complete -F __start_kubectl k
-. .kube/completion.bash.inc
-[ -f ~/.fzf.bash ] && source ~/.fzf.bash
+. $HOME/.kube/completion.bash.inc
+[ -f $HOME/.fzf.bash ] && source $HOME/.fzf.bash
 
 # Ansible enviornment
 PATH=$PATH:/opt/ansible/bin
