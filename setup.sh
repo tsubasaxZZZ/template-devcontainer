@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -ex
 USERNAME=$USER
 # set sudo
@@ -52,7 +52,7 @@ PATH=$PATH:/opt/ansible/bin
 sudo pip3 install virtualenv \
     && cd /opt \
     && sudo virtualenv -p python3 ansible \
-    && /bin/bash -c "source ansible/bin/activate && pip3 install ansible && pip3 install 'pywinrm>=0.2.2' && deactivate" \
+    && /bin/bash -c "source ansible/bin/activate && sudo pip3 install ansible && sudo pip3 install 'pywinrm>=0.2.2' && deactivate" \
     && ansible-galaxy collection install azure.azcollection
 cd
 
